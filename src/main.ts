@@ -14,6 +14,7 @@ import {WindowManager} from './wnd/window_manager'
 import {Nes} from './nes/nes'
 import './util/polyfill'
 import {AsyncTerminable, unzip, Unzipped} from 'fflate'
+import {Persistor} from './util/persist'
 
 import audioOnImg from './res/audio_on.png'
 import audioOffImg from './res/audio_off.png'
@@ -54,9 +55,20 @@ class Main {
     if (url) {
       this.root.style.backgroundImage = url
     }
+
+    if (GlobalSetting.persistCarts) {
+      const apps = Persistor.launchPersists(this.wndMgr, (app: App) => this.removeApp(app))
+      this.apps = this.apps.concat(apps)
+      if (this.apps.length != 0) {
+        const element = document.getElementById('drop-desc')
+        if (element)
+          element.style.display = 'none'
+      }
+    }
   }
 
   public shutDown(): void {
+    Persistor.lock()
     for (const app of this.apps)
       app.destroy()
     GlobalSetting.destroy()
