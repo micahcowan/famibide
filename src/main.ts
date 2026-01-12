@@ -56,19 +56,21 @@ class Main {
       this.root.style.backgroundImage = url
     }
 
+    const bios = StorageUtil.get('fds-bios', '')
+    if (bios)
+      this.diskBios = Util.convertBase64StringToUint8Array(bios)
+
     if (GlobalSetting.persistCarts) {
-      const apps = Persistor.launchPersists(this.wndMgr, (app: App) => this.removeApp(app))
-      this.apps = this.apps.concat(apps)
+      const result = Persistor.launchPersists(this.wndMgr, (app: App) => this.removeApp(app), this.diskBios)
+      this.apps = this.apps.concat(result.apps)
+      if (result.uninsertedApp)
+        this.uninsertedApp = result.uninsertedApp
       if (this.apps.length != 0) {
         const element = document.getElementById('drop-desc')
         if (element)
           element.style.display = 'none'
       }
     }
-
-    const bios = StorageUtil.get('fds-bios', '')
-    if (bios)
-      this.diskBios = Util.convertBase64StringToUint8Array(bios)
   }
 
   public shutDown(): void {
