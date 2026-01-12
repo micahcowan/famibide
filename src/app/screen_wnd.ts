@@ -93,6 +93,7 @@ const kKeyMapping: {[key: string]: KeyType} = {
   BracketRight: KeyType.RBRACKET,
   Escape: KeyType.ESC,
   Semicolon: KeyType.SEMICOLON,
+  Quote: KeyType.COLON,
   Minus: KeyType.MINUS,
   Equal: KeyType.HAT,
   Backslash: KeyType.YEN,
