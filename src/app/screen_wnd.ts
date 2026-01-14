@@ -346,9 +346,7 @@ export class ScreenWnd extends Wnd {
         this.timeScale = TIME_SCALE_NORMAL
         this.padKeyHandler.clearAll()
         this.domKeyboardManager.clear()
-        if (this.nesKeyboard != null) {
-          this.nesKeyboard.clearAll()
-        }
+        this.nesKeyboard?.clearAll()
       }
       break
 
