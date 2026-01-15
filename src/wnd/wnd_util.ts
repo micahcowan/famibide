@@ -201,6 +201,7 @@ export class WndUtil {
         const rootRect = getClientRect()
         const [mx, my] = DomUtil.getMousePosIn(event, resizeBox)
         const dragOfsX = param.horz === 'left' ? -mx : W - mx
+
         const dragOfsY = param.vert === 'top' ? -my : W - my
         const rect = element.getBoundingClientRect()
         const prect = (element.parentNode as HTMLElement).getBoundingClientRect()
@@ -220,11 +221,28 @@ export class WndUtil {
             let [x, y] = DomUtil.getMousePosIn(event2, element.parentNode as HTMLElement)
             x = Util.clamp(x, -dragOfsX, rootRect.width - dragOfsX)
             y = Util.clamp(y, -dragOfsY, rootRect.height - dragOfsY)
+
             box[param.horz] = x + dragOfsX
             box[param.vert] = y + dragOfsY
 
             let width = box.right - box.left - 2  // For border width.
             let height = box.bottom - box.top - 2
+            const ratio = 4/3
+            if (true) {
+              const oldW = width
+              const oldH = height
+
+              if (width / height >= ratio)
+                width = Math.round(height * ratio) | 0
+              else
+                height = Math.round(width / ratio) | 0
+
+              if (param.horz == 'left')
+                box.left = box.right - width
+              if (param.vert == 'top')
+                box.top = box.bottom - height
+            }
+
             if (width < MIN_WIDTH) {
               box[param.horz] -= (MIN_WIDTH - width) * (param.horz === 'left' ? 1 : -1)
               width = MIN_WIDTH
@@ -234,8 +252,8 @@ export class WndUtil {
               height = MIN_HEIGHT
             }
             DomUtil.setStyles(element, {
-              width: `${Math.round(box.right - box.left - 2)}px`,
-              height: `${Math.round(box.bottom - box.top - 2)}px`,
+              width: `${width}px`,
+              height: `${height}px`,
               left: `${Math.round(box.left)}px`,
               top: `${Math.round(box.top)}px`,
             })
