@@ -218,30 +218,47 @@ export class WndUtil {
         const size = {width: box.right - box.left - 2, height: box.bottom - box.top - 2}
         DomUtil.setMouseDragListener({
           move: (event2: MouseEvent) => {
+            const oldWidth = box.right - box.left
+            const oldHeight = box.bottom - box.top
+
             let [x, y] = DomUtil.getMousePosIn(event2, element.parentNode as HTMLElement)
             x = Util.clamp(x, -dragOfsX, rootRect.width - dragOfsX)
             y = Util.clamp(y, -dragOfsY, rootRect.height - dragOfsY)
+            const preserveAspect = true
 
             box[param.horz] = x + dragOfsX
             box[param.vert] = y + dragOfsY
 
-            let width = box.right - box.left - 2  // For border width.
-            let height = box.bottom - box.top - 2
+            let width = box.right - box.left
+            let height = box.bottom - box.top
             const ratio = 4/3
-            if (true) {
-              const oldW = width
-              const oldH = height
+            if (preserveAspect) {
+              if (param.horz == 'center') {
+                width = height * ratio
+                box.left -= (width - oldWidth)/2
+              }
+              else if (param.vert == 'center') {
+                height = width / ratio
+                box.top -= (height - oldHeight)/2
+              }
+              else {
+                if (width / height >= ratio)
+                  width = height * ratio
+                else
+                  height = width / ratio
 
-              if (width / height >= ratio)
-                width = Math.round(height * ratio) | 0
-              else
-                height = Math.round(width / ratio) | 0
+                if (param.horz == 'left')
+                  box.left = box.right - width
+                if (param.vert == 'top')
+                  box.top = box.bottom - height
+              }
 
-              if (param.horz == 'left')
-                box.left = box.right - width
-              if (param.vert == 'top')
-                box.top = box.bottom - height
+              box.right = box.left + width
+              box.bottom = box.top + height
             }
+
+            width += 2  // For border width
+            height += 2
 
             if (width < MIN_WIDTH) {
               box[param.horz] -= (MIN_WIDTH - width) * (param.horz === 'left' ? 1 : -1)
@@ -252,8 +269,8 @@ export class WndUtil {
               height = MIN_HEIGHT
             }
             DomUtil.setStyles(element, {
-              width: `${width}px`,
-              height: `${height}px`,
+              width: `${Math.round(width)}px`,
+              height: `${Math.round(height)}px`,
               left: `${Math.round(box.left)}px`,
               top: `${Math.round(box.top)}px`,
             })
