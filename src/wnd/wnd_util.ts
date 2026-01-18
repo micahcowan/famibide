@@ -334,8 +334,8 @@ export class WndUtil {
               height = MIN_HEIGHT
             }
             DomUtil.setStyles(element, {
-              width: `${Math.round(width)}px`,
-              height: `${Math.round(height)}px`,
+              width: `${Math.round(width - BORDER)}px`,
+              height: `${Math.round(height - BORDER)}px`,
               left: `${Math.round(box.left)}px`,
               top: `${Math.round(box.top)}px`,
             })
