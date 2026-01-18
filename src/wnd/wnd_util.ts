@@ -208,7 +208,7 @@ export class WndUtil {
         const prect = (element.parentNode as HTMLElement).getBoundingClientRect()
         const BORDER = 2
 
-        const box = {
+        const origBox = {
           left: rect.left - prect.left,
           top: rect.top - prect.top,
           right: rect.right - prect.left,
@@ -218,20 +218,47 @@ export class WndUtil {
 
         onEvent(WndEvent.RESIZE_BEGIN)
 
-        const size = {width: box.right - box.left - BORDER, height: box.bottom - box.top - BORDER}
-        DomUtil.setMouseDragListener({
-          move: (event2: MouseEvent) => {
-            const oldWidth = box.right - box.left
-            const oldHeight = box.bottom - box.top
+        // Listen for shift key up/down, and re-calc last resize (if any)
+        const lastEvent: {
+          box?: typeof origBox,
+          oldWidth?: number,
+          oldHeight?: number,
+        } = {}
 
-            let [x, y] = DomUtil.getMousePosIn(event2, element.parentNode as HTMLElement)
-            x = Util.clamp(x, -dragOfsX, rootRect.width - dragOfsX)
-            y = Util.clamp(y, -dragOfsY, rootRect.height - dragOfsY)
+        const retrigger = (_: any) => {
+          dragArgs.move('retrigger')
+        }
+
+        document.addEventListener('keyup', retrigger)
+        document.addEventListener('keydown', retrigger)
+
+        const size = {width: origBox.right - origBox.left - BORDER, height: origBox.bottom - origBox.top - BORDER}
+        const dragArgs = {
+          move: (event2: MouseEvent|'retrigger') => {
+            let box = { ...origBox }
+            let oldWidth = box.right - box.left
+            let oldHeight = box.bottom - box.top
+
             const preserveAspect = domKey.getKeyPressing('ShiftLeft')
               || domKey.getKeyPressing('ShiftRight')
 
-            box[param.horz] = x + dragOfsX
-            box[param.vert] = y + dragOfsY
+            if (event2 !== 'retrigger') {
+              let [x, y] = DomUtil.getMousePosIn(event2, element.parentNode as HTMLElement)
+              x = Util.clamp(x, -dragOfsX, rootRect.width - dragOfsX)
+              y = Util.clamp(y, -dragOfsY, rootRect.height - dragOfsY)
+              box[param.horz] = x + dragOfsX
+              box[param.vert] = y + dragOfsY
+
+              lastEvent.oldWidth = oldWidth
+              lastEvent.oldHeight= oldHeight
+              lastEvent.box = { ...box }
+            } else {
+              // retriggered resize due to key up/down
+              oldWidth = lastEvent.oldWidth || oldWidth
+              oldHeight = lastEvent.oldHeight || oldHeight
+              if (lastEvent.box !== undefined)
+                box = { ...lastEvent.box }
+            }
 
             let width = box.right - box.left
             let height = box.bottom - box.top
@@ -318,8 +345,11 @@ export class WndUtil {
           },
           up: (_event2: MouseEvent) => {
             onEvent(WndEvent.RESIZE_END, size)
+            document.removeEventListener('keyup', retrigger)
+            document.removeEventListener('keydown', retrigger)
           },
-        })
+        }
+        DomUtil.setMouseDragListener(dragArgs)
 
         return true
       }
