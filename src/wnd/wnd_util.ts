@@ -201,10 +201,11 @@ export class WndUtil {
         const rootRect = getClientRect()
         const [mx, my] = DomUtil.getMousePosIn(event, resizeBox)
         const dragOfsX = param.horz === 'left' ? -mx : W - mx
-
         const dragOfsY = param.vert === 'top' ? -my : W - my
         const rect = element.getBoundingClientRect()
         const prect = (element.parentNode as HTMLElement).getBoundingClientRect()
+        const BORDER = 2
+
         const box = {
           left: rect.left - prect.left,
           top: rect.top - prect.top,
@@ -215,7 +216,7 @@ export class WndUtil {
 
         onEvent(WndEvent.RESIZE_BEGIN)
 
-        const size = {width: box.right - box.left - 2, height: box.bottom - box.top - 2}
+        const size = {width: box.right - box.left - BORDER, height: box.bottom - box.top - BORDER}
         DomUtil.setMouseDragListener({
           move: (event2: MouseEvent) => {
             const oldWidth = box.right - box.left
@@ -234,14 +235,48 @@ export class WndUtil {
             const ratio = 4/3
             if (preserveAspect) {
               if (param.horz == 'center') {
+                // Grabbed from top or bottom edge:
+                // expand horizontal from center!
                 width = height * ratio
                 box.left -= (width - oldWidth)/2
+
+                // Don't allow it to expand outside visible desktop
+                let diff = 0
+                if (box.left < 0)
+                  diff = -box.left
+                if (box.left + width + BORDER > rootRect.width)
+                  diff = box.left + width + BORDER - rootRect.width
+                if (diff != 0) {
+                  box.left += diff
+                  width -= diff * 2
+                  height = width / ratio
+                  if (param.vert == 'top')
+                    box.top += 2 * diff / ratio
+                }
               }
               else if (param.vert == 'center') {
+                // Grabbed from left or right edge:
+                // expand vertical from center!
                 height = width / ratio
                 box.top -= (height - oldHeight)/2
+
+                // Don't allow it to expand outside visible desktop
+                let diff = 0
+                if (box.top < 0)
+                  diff = -box.top
+                if (box.top + height + BORDER > rootRect.height)
+                  diff = box.top + height + BORDER - rootRect.height
+                if (diff != 0) {
+                  box.top += diff
+                  height -= diff * 2
+                  width = height * ratio
+                  if (param.horz == 'left')
+                    box.left += 2 * diff * ratio
+                }
               }
               else {
+                // Grabbed from a corner:
+                // just expand from corner
                 if (width / height >= ratio)
                   width = height * ratio
                 else
@@ -257,8 +292,8 @@ export class WndUtil {
               box.bottom = box.top + height
             }
 
-            width += 2  // For border width
-            height += 2
+            width += BORDER
+            height += BORDER
 
             if (width < MIN_WIDTH) {
               box[param.horz] -= (MIN_WIDTH - width) * (param.horz === 'left' ? 1 : -1)
