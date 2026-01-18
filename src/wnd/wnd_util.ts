@@ -1,4 +1,5 @@
 import {DomUtil} from '../util/dom_util'
+import {KeyboardManager} from '../util/keyboard_manager'
 import {Util} from '../util/util'
 import {SubmenuItemInfo, WndEvent, Z_MENU_SUBITEM} from './types'
 import {Wnd} from './wnd'
@@ -112,6 +113,7 @@ export class WndUtil {
   public static makeResizable(
     element: HTMLElement, getClientRect: () => DOMRect,
     onEvent: (event: WndEvent, param?: any) => void,
+    domKey: KeyboardManager,
     opt?: ResizeOption,
   ): void {
     const MIN_WIDTH = opt?.minWidth || 80
@@ -225,7 +227,8 @@ export class WndUtil {
             let [x, y] = DomUtil.getMousePosIn(event2, element.parentNode as HTMLElement)
             x = Util.clamp(x, -dragOfsX, rootRect.width - dragOfsX)
             y = Util.clamp(y, -dragOfsY, rootRect.height - dragOfsY)
-            const preserveAspect = true
+            const preserveAspect = domKey.getKeyPressing('ShiftLeft')
+              || domKey.getKeyPressing('ShiftRight')
 
             box[param.horz] = x + dragOfsX
             box[param.vert] = y + dragOfsY

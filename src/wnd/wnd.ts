@@ -284,7 +284,7 @@ export class Wnd {
           break
         }
         this.onEvent(event, param)
-      }, opt)
+      }, this.wndMgr.getKeyMgr(), opt)
   }
 
   protected maximize(): void {

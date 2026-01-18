@@ -1,4 +1,5 @@
 import {DomUtil} from '../util/dom_util'
+import {KeyboardManager} from '../util/keyboard_manager'
 import {SubmenuItemInfo} from './types'
 import {StartMenu} from './start_menu'
 import {Wnd} from './wnd'
@@ -20,8 +21,10 @@ export class WindowManager {
   private blurred = false
   private rafId = 0  // requestAnimationFrame
   private startMenu: StartMenu
+  private keyMgr: KeyboardManager
 
   public constructor(private root: HTMLElement) {
+    this.keyMgr = new KeyboardManager
     this.onKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey) {  // Ctrl+W: Quit
         if (event.code === 'KeyW') {
@@ -31,6 +34,8 @@ export class WindowManager {
         }
       }
 
+      this.keyMgr.onKeyDown(event)
+
       if (this.windows.length > 0)
         this.windows[0].onEvent(WndEvent.KEY_DOWN, event)
     }
@@ -38,6 +43,8 @@ export class WindowManager {
       event.preventDefault()
       if (this.windows.length > 0)
         this.windows[0].onEvent(WndEvent.KEY_UP, event)
+
+      this.keyMgr.onKeyUp(event)
     }
     this.root.addEventListener('keydown', this.onKeyDown)
     this.root.addEventListener('keyup', this.onKeyUp)
@@ -172,6 +179,10 @@ export class WindowManager {
 
   public getRootClientRect(): DOMRect {
     return this.root.getBoundingClientRect()
+  }
+
+  public getKeyMgr(): KeyboardManager {
+    return this.keyMgr
   }
 
   private removeWnd(wnd: Wnd): void {
