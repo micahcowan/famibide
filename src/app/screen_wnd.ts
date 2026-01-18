@@ -222,7 +222,7 @@ export class ScreenWnd extends Wnd {
     this.contentHolder.appendChild(this.messageHolder)
 
     this.setScaler(GlobalSetting.scaler)
-    this.addResizeBox()
+    this.addResizeBox({ratio: 4/3})
 
     this.subscription = this.stream
       .subscribe((type: AppEvent.Type, param?: any) => {

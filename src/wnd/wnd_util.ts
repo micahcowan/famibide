@@ -8,6 +8,7 @@ export type ResizeOption = {
   minWidth?: number;
   minHeight?: number;
   cornerOnly?: boolean;
+  ratio?: number;
 }
 
 export class WndUtil {
@@ -216,6 +217,9 @@ export class WndUtil {
           center: 0,  // dummy
         }
 
+        const ratio = opt?.ratio || ((origBox.right - origBox.left)
+                                     /(origBox.bottom - origBox.top))
+
         onEvent(WndEvent.RESIZE_BEGIN)
 
         // Listen for shift key up/down, and re-calc last resize (if any)
@@ -262,7 +266,6 @@ export class WndUtil {
 
             let width = box.right - box.left
             let height = box.bottom - box.top
-            const ratio = 4/3
             if (preserveAspect) {
               if (param.horz == 'center') {
                 // Grabbed from top or bottom edge:
